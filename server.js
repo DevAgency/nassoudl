@@ -3,7 +3,17 @@ import cors from 'cors';
 import ytdl from 'ytdl-core';
 
 const app = express();
-app.use(cors());
+
+// Configuration CORS plus spécifique
+const corsOptions = {
+  origin: ['https://nassoudl-frontend.onrender.com', 'http://localhost:5173'],
+  methods: ['POST'],
+  allowedHeaders: ['Content-Type'],
+  exposedHeaders: ['Content-Disposition'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.post('/api/download', async (req, res) => {
@@ -25,8 +35,8 @@ app.post('/api/download', async (req, res) => {
       filter: format === 'audio' ? 'audioonly' : 'videoandaudio'
     };
 
-    const fileName = `${info.videoDetails.title}.${format === 'audio' ? 'mp3' : 'mp4'}`;
-    res.header('Content-Disposition', `attachment; filename="${fileName}"`);
+    const fileName = encodeURIComponent(`${info.videoDetails.title}.${format === 'audio' ? 'mp3' : 'mp4'}`);
+    res.header('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
     res.header('Content-Type', format === 'audio' ? 'audio/mpeg' : 'video/mp4');
 
     ytdl(url, options).pipe(res);
