@@ -50,6 +50,12 @@ const extractTwitterUrl = async (url) => {
 };
 
 app.post('/api/download', async (req, res) => {
+  const cleanup = () => {
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erreur lors du téléchargement' });
+    }
+  };
+
   try {
     const { url, format } = req.body;
     
@@ -63,24 +69,41 @@ app.post('/api/download', async (req, res) => {
         return res.status(400).json({ error: 'URL YouTube invalide' });
       }
 
-      const info = await ytdl.getInfo(url);
-      const options = {
-        quality: format === 'audio' ? 'highestaudio' : 'highest',
-        filter: format === 'audio' ? 'audioonly' : 'videoandaudio'
-      };
+      try {
+        const info = await ytdl.getInfo(url);
+        const options = {
+          quality: format === 'audio' ? 'highestaudio' : 'highest',
+          filter: format === 'audio' ? 'audioonly' : 'videoandaudio'
+        };
 
-      const fileName = encodeURIComponent(`${info.videoDetails.title}.${format === 'audio' ? 'mp3' : 'mp4'}`);
-      res.header('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
-      res.header('Content-Type', format === 'audio' ? 'audio/mpeg' : 'video/mp4');
+        const fileName = encodeURIComponent(`${info.videoDetails.title}.${format === 'audio' ? 'mp3' : 'mp4'}`);
+        res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
+        res.setHeader('Content-Type', format === 'audio' ? 'audio/mpeg' : 'video/mp4');
+        res.setHeader('Transfer-Encoding', 'chunked');
 
-      const stream = ytdl(url, options);
-      stream.on('error', (error) => {
-        console.error('Stream error:', error);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Erreur lors du téléchargement' });
-        }
-      });
-      stream.pipe(res);
+        const stream = ytdl(url, options);
+        
+        stream.on('error', (error) => {
+          console.error('Stream error:', error);
+          cleanup();
+          stream.destroy();
+        });
+
+        stream.on('end', () => {
+          if (!res.finished) {
+            res.end();
+          }
+        });
+
+        req.on('close', () => {
+          stream.destroy();
+        });
+
+        stream.pipe(res);
+      } catch (error) {
+        console.error('YouTube download error:', error);
+        return res.status(500).json({ error: 'Erreur lors du téléchargement YouTube' });
+      }
     }
     
     // Instagram
@@ -89,7 +112,7 @@ app.post('/api/download', async (req, res) => {
         const mediaUrl = await extractInstagramUrl(url);
         if (mediaUrl) {
           const fileName = `instagram_media.${format === 'audio' ? 'mp3' : 'mp4'}`;
-          res.header('Content-Disposition', `attachment; filename="${fileName}"`);
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
           await downloadFile(mediaUrl, res);
         } else {
           res.status(400).json({ error: 'Média Instagram non trouvé' });
@@ -105,7 +128,7 @@ app.post('/api/download', async (req, res) => {
         const mediaUrl = await extractTwitterUrl(url);
         if (mediaUrl) {
           const fileName = `twitter_media.${format === 'audio' ? 'mp3' : 'mp4'}`;
-          res.header('Content-Disposition', `attachment; filename="${fileName}"`);
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
           await downloadFile(mediaUrl, res);
         } else {
           res.status(400).json({ error: 'Média Twitter non trouvé' });
@@ -128,9 +151,7 @@ app.post('/api/download', async (req, res) => {
 
   } catch (error) {
     console.error('Download error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Erreur lors du téléchargement' });
-    }
+    cleanup();
   }
 });
 
