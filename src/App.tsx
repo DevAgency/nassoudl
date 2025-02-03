@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Download, Youtube, Settings, FileVideo, FileAudio } from 'lucide-react';
+import { Download, Youtube, Twitter, Facebook, Instagram, BookText as TikTok, Settings, FileVideo, FileAudio } from 'lucide-react';
 
+type Platform = 'youtube' | 'twitter' | 'facebook' | 'instagram' | 'tiktok' | 'unknown';
 type Quality = '4K' | '1080p' | '720p' | '480p' | '360p';
 type Format = 'video' | 'audio';
 
-// L'URL de l'API en production ou en développement
 const API_URL = import.meta.env.PROD 
   ? 'https://nassoudl-backend.onrender.com'
   : 'http://localhost:3000';
@@ -15,6 +15,26 @@ function App() {
   const [format, setFormat] = useState<Format>('video');
   const [quality, setQuality] = useState<Quality>('1080p');
   const [error, setError] = useState<string | null>(null);
+
+  const detectPlatform = (url: string): Platform => {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+    if (url.includes('twitter.com')) return 'twitter';
+    if (url.includes('facebook.com')) return 'facebook';
+    if (url.includes('instagram.com')) return 'instagram';
+    if (url.includes('tiktok.com')) return 'tiktok';
+    return 'unknown';
+  };
+
+  const getPlatformIcon = (platform: Platform) => {
+    switch (platform) {
+      case 'youtube': return <Youtube className="w-6 h-6 text-red-500" />;
+      case 'twitter': return <Twitter className="w-6 h-6 text-blue-400" />;
+      case 'facebook': return <Facebook className="w-6 h-6 text-blue-600" />;
+      case 'instagram': return <Instagram className="w-6 h-6 text-pink-500" />;
+      case 'tiktok': return <TikTok className="w-6 h-6 text-black" />;
+      default: return null;
+    }
+  };
 
   const handleDownload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,10 +93,10 @@ function App() {
         <main className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4 text-gray-900">
-              Téléchargez vos vidéos YouTube
+              Téléchargez vos vidéos facilement
             </h2>
             <p className="text-lg text-gray-600">
-              Simple, rapide et efficace
+              Compatible avec YouTube, Twitter, TikTok, Instagram et Facebook
             </p>
           </div>
 
@@ -86,12 +106,14 @@ function App() {
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Collez l'URL de la vidéo YouTube ici..."
+                placeholder="Collez l'URL de la vidéo ici..."
                 className="w-full px-4 py-4 pr-12 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <Youtube className="w-6 h-6 text-red-500" />
-              </div>
+              {url && getPlatformIcon(detectPlatform(url)) && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  {getPlatformIcon(detectPlatform(url))}
+                </div>
+              )}
             </div>
 
             {error && (
@@ -107,7 +129,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setFormat('video')}
-                    className={`flex items-center justify-center px-4 py-3 rounded-lg w-full ${
+                    className={`flex items-center justify-center px-4 py-3 rounded-lg w-full sm:w-auto ${
                       format === 'video'
                         ? 'bg-purple-100 text-purple-700 border-2 border-purple-500'
                         : 'bg-gray-100 text-gray-700 border-2 border-transparent'
@@ -119,7 +141,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setFormat('audio')}
-                    className={`flex items-center justify-center px-4 py-3 rounded-lg w-full ${
+                    className={`flex items-center justify-center px-4 py-3 rounded-lg w-full sm:w-auto ${
                       format === 'audio'
                         ? 'bg-purple-100 text-purple-700 border-2 border-purple-500'
                         : 'bg-gray-100 text-gray-700 border-2 border-transparent'
@@ -195,8 +217,8 @@ function App() {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <Youtube className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">YouTube</h3>
-              <p className="text-gray-600">Téléchargez facilement depuis YouTube</p>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">Multi-plateformes</h3>
+              <p className="text-gray-600">Compatible avec les principales plateformes de vidéos</p>
             </div>
           </div>
         </main>
