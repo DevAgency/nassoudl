@@ -5,7 +5,7 @@ type Quality = '1080p' | '720p' | '480p' | '360p';
 type Format = 'video' | 'audio';
 
 // L'URL de l'API en production ou en développement
-const API_URL = 'https://nassoudl-backend.onrender.com'; 
+const API_URL = import.meta.env.PROD 
   ? 'https://nassoudl-backend.onrender.com' // Nous devrons déployer le backend sur Render ou un service similaire
   : 'http://localhost:3000';
 
