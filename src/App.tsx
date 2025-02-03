@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { Download, Youtube, Settings, FileVideo, FileAudio } from 'lucide-react';
 
-type Quality = '1080p' | '720p' | '480p' | '360p';
+type Quality = '4K' | '1080p' | '720p' | '480p' | '360p';
 type Format = 'video' | 'audio';
 
 // L'URL de l'API en production ou en développement
 const API_URL = import.meta.env.PROD 
-  ? 'https://nassoudl-backend.onrender.com' // Nous devrons déployer le backend sur Render ou un service similaire
+  ? 'https://nassoudl-backend.onrender.com'
   : 'http://localhost:3000';
 
 function App() {
   const [url, setUrl] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [format, setFormat] = useState<Format>('video');
-  const [quality, setQuality] = useState<Quality>('720p');
+  const [quality, setQuality] = useState<Quality>('1080p');
   const [error, setError] = useState<string | null>(null);
 
   const handleDownload = async (e: React.FormEvent) => {
@@ -134,8 +134,8 @@ function App() {
               {format === 'video' && (
                 <div className="flex flex-col space-y-3">
                   <label className="text-sm font-medium text-gray-700">Qualité</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['1080p', '720p', '480p', '360p'] as Quality[]).map((q) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {(['4K', '1080p', '720p', '480p', '360p'] as Quality[]).map((q) => (
                       <button
                         key={q}
                         type="button"
